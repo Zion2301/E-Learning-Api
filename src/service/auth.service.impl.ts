@@ -19,7 +19,7 @@ export class AuthServiceImpl implements AuthService {
     }
 
     const isPasswordValid = await comparePassword(data.password, user.password)
-        if (!isPasswordValid) {
+        if (!isPasswordValid) { 
             throw new CustomError(401, "Invalid Password or Email");
         }
 

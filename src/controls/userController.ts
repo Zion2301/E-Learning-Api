@@ -1,6 +1,8 @@
 import { Response, Request, NextFunction } from "express";
 import { UserServiceImpl } from "../service/userServiceImpl";
 import { CreatedUserDTO } from "../dtos/createUser.dto";
+import { CustomRequest } from "../middleware/authMiddleware";
+import { StatusCodes } from "http-status-codes";
 export class UserController {
     private userService: UserServiceImpl;
 
@@ -81,4 +83,23 @@ export class UserController {
       next(error)
     }
    }
+
+    public profile = async (
+        req: CustomRequest,
+        res: Response,
+        next: NextFunction
+    ): Promise<void | any> => {
+        try {
+            const id = req.userAuth;
+            const user = await this.userService.getUserById(Number(id));
+
+            res.status(StatusCodes.OK).json({
+                error: false,
+                message: "User profile reviewed successfully",
+                data: user,
+            })
+        } catch (error){
+            next(error)
+        }
+    }
 }

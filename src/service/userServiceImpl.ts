@@ -4,6 +4,7 @@ import { CreatedUserDTO } from "../dtos/createUser.dto";
 import { UserServices } from "./user.service";
 import { CustomError } from "../error/customerror";
 import { hashPassword } from "../error/password.utils";
+import { StatusCodes } from "http-status-codes";
 
 export class UserServiceImpl implements UserServices {
    async createUser(data: CreatedUserDTO): Promise<User> {
@@ -70,9 +71,25 @@ export class UserServiceImpl implements UserServices {
          throw new CustomError(404, "User with this ID does not exist");
          
       }
-      const user = await db.user.delete({
+       await db.user.delete({
          where: {id}
       })
    }
    
+
+   async profile(id: number): Promise<Omit<User, "password">> {
+      const user = await db.user.findFirst({
+         where: {
+            id,
+         }
+      });
+
+      if(!user) {
+         throw new CustomError(
+            StatusCodes.NOT_FOUND,
+            `user with id ${id} not found`
+         );
+      }
+      return user;
+   }
 } 
