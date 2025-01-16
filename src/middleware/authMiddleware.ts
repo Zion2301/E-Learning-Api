@@ -1,4 +1,3 @@
-import { config } from "dotenv";
 import { NextFunction, Request, Response } from "express";
 import { getReasonPhrase, StatusCodes } from "http-status-codes";
 import jwt, { JwtPayload } from 'jsonwebtoken';

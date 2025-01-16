@@ -38,7 +38,6 @@ app.use(express.json());
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/course", courseRouter)
 app.use("/api/v1/login", authRouter)
-
 app.use(errorHandler)
 
 app.listen(PORT, ()=> {
