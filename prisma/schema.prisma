@@ -25,7 +25,7 @@ model User {
   password  String
   firstName String?
   lastName  String?
-  googleId  String   @unique
+  googleId  String?   @unique
   role    USER_ROLE @default(USER)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

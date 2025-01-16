@@ -1,7 +1,7 @@
 import { Response, Request} from "express";
 import { OAuth2Client } from "google-auth-library";
 import {  StatusCodes } from "http-status-codes";
-import  { User }  from "@prisma/client";
+import  { Role, User }  from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken"
 
@@ -36,7 +36,7 @@ export const googlesignup = async( req: CustomRequest, res: Response): Promise<v
 
     const userexists = await prisma.user.findUnique({
         where: {
-            googleId: tokenpayload?.sub
+            googleId: tokenpayload.sub
         } //the sub field is the unique identifier
     })
 
@@ -48,7 +48,7 @@ export const googlesignup = async( req: CustomRequest, res: Response): Promise<v
     }
 
     const googleId = tokenpayload?.sub;
-    const email = tokenpayload?.email
+    const email = tokenpayload.email
     const firstname = tokenpayload.given_name
     const lastname = tokenpayload.family_name
 
@@ -60,15 +60,16 @@ if (!googleId || !email || !firstname) {
    
     const newUser = await prisma.user.create({
        data: {
-        googleId: googleId,
         email: email,
+        password: 'password', // Use a hashed password in production
         firstName: firstname,
         lastName: lastname,
-        password: ''
+        googleId: googleId, // Ensure this is included
+        role: "USER",  
        }
     }) //create a new user if they dont exist previously
 
-
+ 
     const jwtToken = jwt.sign({ id: newUser.id, email: newUser.email }, process.env.JWT_SECRET || "", { expiresIn: '1h' });
 
     req.user = newUser; // Add user to request object for later middleware use
@@ -80,3 +81,4 @@ if (!googleId || !email || !firstname) {
         });
     }  //if everythng fails, throw error
 }
+
