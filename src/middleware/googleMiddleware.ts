@@ -1,8 +1,9 @@
-import { Response, Request, NextFunction } from "express";
+import { Response, Request} from "express";
 import { OAuth2Client } from "google-auth-library";
 import {  StatusCodes } from "http-status-codes";
 import  { User }  from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
+import jwt from "jsonwebtoken"
 
 
 export interface CustomRequest extends Request{
@@ -10,7 +11,7 @@ export interface CustomRequest extends Request{
 }
 const prisma = new PrismaClient();
 const myclient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); //create and instance of the oauth smth using my google client id
-export const googlesignup = async(res: Response, req: CustomRequest, next: NextFunction): Promise<void> => {
+export const googlesignup = async( req: CustomRequest, res: Response): Promise<void> => {
     try {
         const token = req.body.token;  //extract google id token from the frontnd
     if (!token) {
@@ -40,8 +41,10 @@ export const googlesignup = async(res: Response, req: CustomRequest, next: NextF
     })
 
     if (userexists) {
-        req.user = userexists; //if the user exists, the user is attached to the req object, there fore making the user available for the next process
-        return next() //passes the user on to the next function
+        const jwtToken = jwt.sign({ id: userexists.id, email: userexists.email }, process.env.JWT_SECRET || "", { expiresIn: '1h' });
+            req.user = userexists;
+         res.status(StatusCodes.OK).json({ message: "User logged in successfully", userexists, token: jwtToken });
+         return;
     }
 
     const googleId = tokenpayload?.sub;
@@ -65,8 +68,12 @@ if (!googleId || !email || !firstname) {
        }
     }) //create a new user if they dont exist previously
 
-    req.user = newUser;
-    return next()
+
+    const jwtToken = jwt.sign({ id: newUser.id, email: newUser.email }, process.env.JWT_SECRET || "", { expiresIn: '1h' });
+
+    req.user = newUser; // Add user to request object for later middleware use
+    res.status(StatusCodes.CREATED).json({ message: "User signed up successfully", newUser, token: jwtToken });
+    return;
     } catch (error){
         res.status(StatusCodes.INTERNAL_SERVER_ERROR).json({
             message: "Internal Server Error",
