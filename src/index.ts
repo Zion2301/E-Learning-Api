@@ -4,7 +4,6 @@ import dotenv from "dotenv";
 import userRouter from "./Route/userRoute";
 import courseRouter from "./Route/courseRoute"
 import authRouter from "./Route/authRouter";
-import googleRoute from "./Route/googleRouter";
 import { errorHandler } from "./error/errorHandler";
 
 
@@ -39,7 +38,6 @@ app.use(express.json());
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/course", courseRouter)
 app.use("/api/v1/login", authRouter)
-app.use("/api/v1/google", googleRoute)
 app.use(errorHandler)
 
 app.listen(PORT, ()=> {

@@ -1,7 +1,7 @@
 import { Response, Request} from "express";
 import { OAuth2Client } from "google-auth-library";
 import {  StatusCodes } from "http-status-codes";
-import  { Role, User }  from "@prisma/client";
+import  { User }  from "@prisma/client";
 import { PrismaClient } from "@prisma/client";
 import jwt from "jsonwebtoken"
 
