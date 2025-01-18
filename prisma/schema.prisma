@@ -26,6 +26,8 @@ model User {
   firstName String?
   lastName  String?
   googleId  String?   @unique
+  githubId  String?   @unique
+  facebookId  String?   @unique
   role    USER_ROLE @default(USER)
   emailVerified  Boolean   @default(false)
   otp     String?
