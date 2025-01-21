@@ -7,16 +7,18 @@ import { isValidPhoneNumber } from "../utils/phoneNumber.utils";
 const prisma = new PrismaClient();
 const twilioClient = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
 
-export const sendPhoneOTP = async (req: Request, res: Response) => {
+export const sendPhoneOTP = async (req: Request, res: Response): Promise<void> => {
   const { phoneNumber } = req.body;
 
   if (!phoneNumber) {
-    return res.status(400).json({ message: "Phone number is required" });
+     res.status(400).json({ message: "Phone number is required" });
+     return
   }
 
   // Validate international phone number format (using libphonenumber or custom regex)
   if (!isValidPhoneNumber(phoneNumber)) {
-    return res.status(400).json({ message: "Invalid phone number format" });
+     res.status(400).json({ message: "Invalid phone number format" });
+     return
   }
 
   try {
@@ -28,7 +30,8 @@ export const sendPhoneOTP = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({ where: { phoneNumber } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+      res.status(404).json({ message: "User not found" });
+      return
     }
 
     // Update user with OTP and OTP expiry
@@ -44,19 +47,22 @@ export const sendPhoneOTP = async (req: Request, res: Response) => {
       from: process.env.TWILIO_PHONE_NUMBER, // Your Twilio phone number
     });
 
-    return res.status(200).json({ message: "OTP sent successfully" });
+    res.status(200).json({ message: "OTP sent successfully" });
+    return
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred" });
+     res.status(500).json({ message: "An error occurred" });
+     return
   }
 };
 
 // Helper function to verify OTP (to be called after user submits OTP)
-export const verifyPhoneOTP = async (req: Request, res: Response) => {
+export const verifyPhoneOTP = async (req: Request, res: Response): Promise<void> => {
   const { phoneNumber, otp } = req.body;
 
   if (!phoneNumber || !otp) {
-    return res.status(400).json({ message: "Phone number and OTP are required" });
+     res.status(400).json({ message: "Phone number and OTP are required" });
+     return
   }
 
   try {
@@ -64,27 +70,33 @@ export const verifyPhoneOTP = async (req: Request, res: Response) => {
     const user = await prisma.user.findUnique({ where: { phoneNumber } });
 
     if (!user) {
-      return res.status(404).json({ message: "User not found" });
+     res.status(404).json({ message: "User not found" });
+     return 
     }
 
     if (user.otp !== otp) {
-      return res.status(400).json({ message: "Invalid OTP" });
+       res.status(400).json({ message: "Invalid OTP" });
+       return
     }
 
     // Check if OTP has expired
     if (!user.otpExpiry) {
-        return res.status(400).json({ message: "OTP has expired or is invalid" });
+         res.status(400).json({ message: "OTP has expired or is invalid" });
+         return
       }
 
     const now = new Date();
     if (user.otpExpiry < now) {
-      return res.status(400).json({ message: "OTP has expired" });
+       res.status(400).json({ message: "OTP has expired" });
+       return
     }
 
     // OTP is valid, proceed to password reset or other actions
-    return res.status(200).json({ message: "OTP verified successfully" });
+     res.status(200).json({ message: "OTP verified successfully" });
+     return
   } catch (error) {
     console.error(error);
-    return res.status(500).json({ message: "An error occurred" });
+     res.status(500).json({ message: "An error occurred" });
+     return
   }
 };

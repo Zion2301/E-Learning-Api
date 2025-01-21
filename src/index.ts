@@ -7,6 +7,7 @@ import authRouter from "./Route/authRouter";
 import { errorHandler } from "./error/errorHandler";
 import { passport } from './middleware/passprtConfig';
 import session from "express-session";
+import { sendPhoneOTP, verifyPhoneOTP } from "./controls/phoneotpController";
 import { forgetPassword, verifyOTP, resetPassword } from "./controls/otpcontroller";
 
 
@@ -59,6 +60,11 @@ app.use("/api/v1/login", authRouter)
 app.post("/api/auth/forget-password", forgetPassword)
 app.post("/api/auth/verify-otp", verifyOTP);
 app.post("/api/auth/reset-password", resetPassword)
+// Route for sending OTP to phone number
+app.post("/send-phone-otp", sendPhoneOTP);
+
+// Route for verifying OTP entered by user
+app.post("/verify-phone-otp", verifyPhoneOTP);
 app.use(errorHandler)
 
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
