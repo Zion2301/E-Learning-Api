@@ -1,18 +1,30 @@
-import passport, { Profile } from "passport"
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
-import { Strategy as GitHubStrategy } from 'passport-github2';
+import passport from "passport"
+import google from 'passport-google-oauth20';
+import { Profile, VerifyCallback } from 'passport-google-oauth20';
+// import { Strategy as GitHubStrategy } from 'passport-github2';
 import { PrismaClient } from "@prisma/client";
+import { Request } from "express";
+import { User } from "@prisma/client";
 
 const prisma = new PrismaClient();
+console.log(process.env.GOOGLE_CLIENT_ID);
+console.log(process.env.GOOGLE_CLIENT_SECRET);
+
+const GoogleStrategy = google.Strategy;
+
+
 passport.use(new GoogleStrategy (  //defines the google oAuth strategy for passport
     {
     clientID: process.env.GOOGLE_CLIENT_ID!,
     clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
-    callbackURL: process.env.GOOGLE_CALLBACK_URL  //necessary values to authenticate with google
+    callbackURL: process.env.GOOGLE_CALLBACK_URL,
+    passReqToCallback: true  //necessary values to authenticate with google
 },
-  async (accessToken, refreshToken, profile, done) => {  //these are the paramtres provided by google during authentication
+  async (req: Request, accessToken: string, refreshToken: string, profile: Profile, done: VerifyCallback
+
+  ) => {  //these are the params provided by google during authentication
       try {
-         const user = await prisma.user.upsert({  //check if a usr exists by their google id
+         const user = await prisma.user.upsert({  //check if a user exists by their google id
              where: {googleId: profile.id},
              update: {},
              create: {
@@ -22,7 +34,7 @@ passport.use(new GoogleStrategy (  //defines the google oAuth strategy for passp
                 lastName: profile.name?.familyName ?? '',
                 password: profile.provider,
              },
-         });
+         }); 
          return done(null, user)
       } catch (err) {
         console.error('Error in Google OAuth:', err);
@@ -31,31 +43,31 @@ passport.use(new GoogleStrategy (  //defines the google oAuth strategy for passp
   }
 ));
 
-passport.use( new GitHubStrategy(
-{
-   clientID: process.env.GITHUB_CLIENT_ID!,
-   clientSecret: process.env.GITHUB_CLIENT_SECRET!,
-   callbackURL: process.env.GITHUB_CALLBACK_URL!,
-},
-  async (accessToken: string, refreshToken:string, profile:Profile, done: any) => {
-       try {
-          const user = await prisma.user.upsert({
-            where: {githubId: profile.id},
-            update: {},
-            create: {
-                githubId: profile.id,
-          email: profile.emails?.[0]?.value ?? '',
-          firstName: profile.username ?? '',
-          password: profile.provider
-            }
-          })
-          return done(null, user)
-       } catch (err) {
-        console.error('Error in GitHub OAuth:', err);
-        return done(err, null);
-       }
-  }
-))
+// passport.use( new GitHubStrategy(
+// {
+//    clientID: process.env.GITHUB_CLIENT_ID!,
+//    clientSecret: process.env.GITHUB_CLIENT_SECRET!,
+//    callbackURL: process.env.GITHUB_CALLBACK_URL!,
+// },
+//   async (accessToken: string, refreshToken:string, profile:Profile, done: any) => {
+//        try {
+//           const user = await prisma.user.upsert({
+//             where: {githubId: profile.id},
+//             update: {},
+//             create: {
+//                 githubId: profile.id,
+//           email: profile.emails?.[0]?.value ?? '',
+//           firstName: profile.username ?? '',
+//           password: profile.provider
+//             }
+//           })
+//           return done(null, user)
+//        } catch (err) {
+//         console.error('Error in GitHub OAuth:', err);
+//         return done(err, null);
+//        }
+//   }
+// ))
 
 passport.serializeUser((user: any, done) => {  //serializing user saves the users id in the session or token
     done(null, user.id);
@@ -73,4 +85,4 @@ passport.serializeUser((user: any, done) => {  //serializing user saves the user
   });
   
 
-export default passport
+export {passport}
