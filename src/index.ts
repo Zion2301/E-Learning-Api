@@ -5,16 +5,13 @@ import userRouter from "./Route/userRoute";
 import courseRouter from "./Route/courseRoute"
 import authRouter from "./Route/authRouter";
 import { errorHandler } from "./error/errorHandler";
-import bodyParser from 'body-parser';
 import { passport } from './middleware/passprtConfig';
 import session from "express-session";
-
+import { forgetPassword, verifyOTP, resetPassword } from "./controls/otpcontroller";
 
 
 
 dotenv.config();
-
-
 const portEnv = process.env.PORT;
 
 if (!portEnv) {
@@ -54,11 +51,14 @@ app.use(passport.session());
 app.use(cors(corsOption));
 
 app.use(express.json());
-app.use(bodyParser.json()); 
+// app.use(bodyParser.json()); 
 
 app.use("/api/v1/users", userRouter)
 app.use("/api/v1/course", courseRouter)
 app.use("/api/v1/login", authRouter)
+app.post("/api/auth/forget-password", forgetPassword)
+app.post("/api/auth/verify-otp", verifyOTP);
+app.post("/api/auth/reset-password", resetPassword)
 app.use(errorHandler)
 
 app.get('/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
