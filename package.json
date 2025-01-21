@@ -48,6 +48,7 @@
     "passport-github2": "^0.1.12",
     "passport-google-oauth20": "^2.0.0",
     "prisma": "^6.2.1",
-    "react-mail": "^0.0.1"
+    "react-mail": "^0.0.1",
+    "twilio": "^5.4.2"
   }
 }
