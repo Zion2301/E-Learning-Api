@@ -10,6 +10,10 @@ export class CreatedUserDTO {
     @Length(2, 50)
     lastName!: string
 
+    @IsNotEmpty()
+    @Length(2, 50)
+    phoneNumber!: string
+
     @IsEmail()
     email!: string
 

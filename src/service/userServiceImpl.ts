@@ -25,6 +25,7 @@ export class UserServiceImpl implements UserServices {
             firstName: data.firstName,
             lastName: data.lastName,
             role: data.role,
+            phoneNumber: data.phoneNumber
         },
       })
       return user;
@@ -92,4 +93,31 @@ export class UserServiceImpl implements UserServices {
       }
       return user;
    }
+
+   async updateProfilePic(
+      id: number,
+      data: { profilePic: string }
+    ): Promise<Object | any> {
+      const user = await db.user.findFirst({
+        where: { id },
+      });
+  
+      if (!user) {
+        throw new CustomError(StatusCodes.NOT_FOUND, "User not found");
+      }
+      const updatedUser = await db.user.update({
+        where: {
+          id,
+        },
+        data: { profilePicture: data.profilePic },
+      });
+  
+      //return updateuser without sensitive fileds like password
+      return {
+        id: updatedUser.id,
+        name: updatedUser.firstName,
+        email: updatedUser.email,
+        profilePicture: updatedUser.profilePicture,
+      };
+    }
 } 

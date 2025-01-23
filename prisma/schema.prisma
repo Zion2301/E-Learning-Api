@@ -31,6 +31,7 @@ model User {
   facebookId  String?   @unique
   role    USER_ROLE @default(USER)
   emailVerified  Boolean   @default(false)
+  profilePicture String?
   otp     String?
   otpExpiry  DateTime?
   createdAt DateTime @default(now())
