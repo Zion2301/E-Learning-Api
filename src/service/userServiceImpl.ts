@@ -3,10 +3,85 @@ import { db } from "../config/db";
 import { CreatedUserDTO } from "../dtos/createUser.dto";
 import { UserServices } from "./user.service";
 import { CustomError } from "../error/customerror";
-import { hashPassword } from "../error/password.utils";
+import { comparePassword, hashPassword } from "../error/password.utils";
 import { StatusCodes } from "http-status-codes";
+import { ChangePasswordDTO, ResetPasswordDTO } from "../dtos/resetPassword.dto";
+// import { compare } from "bcryptjs";
 
 export class UserServiceImpl implements UserServices {
+  async setPassword(id: number, data: ChangePasswordDTO): Promise<void> {
+      await db.$transaction(async (transaction) => {
+         const user = await transaction.user.findUnique({
+            where: {
+               id
+            }
+         })
+
+         if (!user) {
+            throw new CustomError(StatusCodes.NOT_FOUND, "User not found")
+         }
+
+         const isPasswordValid = await comparePassword(
+            data.oldPassword,
+            user.password || ""
+         ) 
+
+         if (!isPasswordValid) {
+            throw new CustomError(400, "Password is incorrect")
+         }
+
+         const previousPasswords = await transaction.passwordHistory.findMany({
+            where: {
+               userId: id
+            },
+            select: {
+               passwordHash: true
+            },
+         })
+         for(const history of previousPasswords){
+            const isPreviouslyUsed = await comparePassword(
+               data.newPassword,
+               history.passwordHash
+            );
+
+            if (isPreviouslyUsed) {
+               throw new CustomError(400, "This new password has been used before. Please choos a new password")
+            }
+         }
+
+         if (user.password) {
+            await transaction.passwordHistory.create({
+               data: {userId: user.id, passwordHash: user.password},
+            })
+         }
+
+         const hashedPassword = await hashPassword(data.newPassword);
+
+         await transaction.user.update({
+            where: {id},
+            data: {password: hashedPassword},
+         })
+
+         const passwordHistoryCount = await transaction.passwordHistory.count({
+            where: {userId: id},
+         })
+       if (passwordHistoryCount > 5) {
+         const oldestPassword = await transaction.passwordHistory.findFirst({
+            where: {userId: id},
+            orderBy: {createdAt: "asc"}
+           })
+
+           if (oldestPassword) {
+            await transaction.passwordHistory.delete({
+               where: {id}
+            })
+        }
+       }
+       
+      })
+
+     
+   }
    async createUser(data: CreatedUserDTO): Promise<User> {
       const isUserExist = await db.user.findFirst({
         where: {

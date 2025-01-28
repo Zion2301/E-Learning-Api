@@ -3,6 +3,8 @@ import { UserServiceImpl } from "../service/userServiceImpl";
 import { CreatedUserDTO } from "../dtos/createUser.dto";
 import { CustomRequest } from "../middleware/authMiddleware";
 import { StatusCodes } from "http-status-codes";
+import { ChangePasswordDTO, ResetPasswordDTO } from "../dtos/resetPassword.dto";
+import { error } from "console";
 export class UserController {
     private userService: UserServiceImpl;
 
@@ -132,4 +134,15 @@ export class UserController {
           next(error);
         }
       };
+
+      public setPassord = async (req: CustomRequest, res: Response, next: NextFunction): Promise<void> => {
+          try {
+            const id = req.userAuth;
+            const data = req.body as ChangePasswordDTO
+            await this.userService.setPassword(Number(id), data);
+            res.status(StatusCodes.OK).json({ error: false, message: "Password changed successfully"})
+          } catch (error) {
+              next(error)
+          }
+      }
 }
